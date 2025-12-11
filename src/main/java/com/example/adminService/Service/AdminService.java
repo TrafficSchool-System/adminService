@@ -5,6 +5,8 @@ import com.example.adminService.Dto.AdminLoginResponse;
 import com.example.adminService.Dto.AdminResponseDTO;
 import com.example.adminService.Entity.Admin;
 import com.example.adminService.Repository.AdminRepository;
+import com.example.adminService.Security.JwtUtil;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -18,7 +20,7 @@ import java.time.LocalDateTime;
 public class AdminService implements AdminServiceInterface {
 
     private final AdminRepository adminRepository;
-    private final JwtService jwtService;
+    private final JwtUtil jwtService;
     private final AuthenticationManager authenticationManager;
 
     @Override

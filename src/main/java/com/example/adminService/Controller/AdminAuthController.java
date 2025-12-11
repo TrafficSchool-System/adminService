@@ -2,8 +2,9 @@ package com.example.adminService.Controller;
 
 import com.example.adminService.Dto.AdminLoginRequest;
 import com.example.adminService.Dto.AdminLoginResponse;
+import com.example.adminService.Security.JwtUtil;
 import com.example.adminService.Service.AdminServiceInterface;
-import com.example.adminService.Service.JwtService;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -17,7 +18,7 @@ import java.util.Map;
 public class AdminAuthController {
 
     private final AdminServiceInterface adminService;
-    private final JwtService jwtService;
+    private final JwtUtil jwtService;
 
     // PUBLIC ENDPOINT - Ingen autentisering krävs
     @PostMapping("/login")

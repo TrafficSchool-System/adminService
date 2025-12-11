@@ -1,11 +1,11 @@
-package com.example.adminService.Service;
+package com.example.adminService.Security;
 
 import io.jsonwebtoken.Claims;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.function.Function;
 
-public interface JwtService {
+public interface JwtUtil {
     
     // Extrahera username från token
     String extractUsername(String token);
