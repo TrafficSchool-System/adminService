@@ -15,57 +15,70 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableMethodSecurity // Aktivera PreAuthorize och andra metoder
 public class SecurityConfig {
 
-    @Autowired
-    private JwtAuthenticationFilter jwtAuthenticationFilter; // Vår egna JWT filter som validerar token
+        /**
+         * REFACTORED SECURITY ARCHITECTURE:
+         * - Gateway validerar JWT (JwtAuthenticationGlobalFilter)
+         * - Gateway sätter headers: X-User-Id, X-User-Email, X-User-Role
+         * - AdminService läser headers (GatewayHeaderAuthenticationFilter)
+         */
+        @Autowired
+        private GatewayHeaderAuthenticationFilter gatewayHeaderAuthenticationFilter;
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                // Stänger av CSRF-Skydd eftersom vi använder JWT (stateless)
-                .csrf(csrf -> csrf.disable())
+        @Bean
+        public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+                http
+                                // Stänger av CSRF-Skydd eftersom vi använder JWT (stateless)
+                                .csrf(csrf -> csrf.disable())
 
-                // Konfigurera vilka endpoints som kräver authentication
-                .authorizeHttpRequests(auth -> auth
+                                // Configure which endpoints require authentication
+                                // ORDER IMPORTANT: More specific rules must come first!
+                                .authorizeHttpRequests(auth -> auth
 
-                        // Öppna Endpoints
-                        .requestMatchers("api/admin/auth/login").permitAll()
+                                                // ==============================================
+                                                // PUBLIC ENDPOINTS - No authentication required
+                                                // ==============================================
+                                                .requestMatchers(
+                                                                "/api/admin/auth/login",
+                                                                "/api/admin/auth/health")
+                                                .permitAll()
 
-                        // Alla andra kräver också authentication
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                                                // ==============================================
+                                                // ADMIN ENDPOINTS - Require ADMIN role
+                                                // ==============================================
+                                                .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
-                        // Alla andra blockera
-                        .anyRequest().denyAll()
-                )
-                
-                // Konfigurera stateless session (vi lagrar ingen session på servern)
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                                                // All others deny
+                                                .anyRequest().denyAll())
 
-                // Lägg till vårt JWT-filter innan standard Spring Security authenticationfilter
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                                // Konfigurera stateless session (vi lagrar ingen session på servern)
+                                .sessionManagement(session -> session
+                                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-                // Hantering av fel relaterade till autentication/authorization
-                .exceptionHandling(exceptions -> exceptions
+                                // Lägg till Gateway header filter som läser X-User-* headers
+                                .addFilterBefore(gatewayHeaderAuthenticationFilter,
+                                                UsernamePasswordAuthenticationFilter.class)
 
-                        // Hantera 401 Unauthorized (token saknas eller ogiltig)
-                        .authenticationEntryPoint((request, response, authException) -> {
-                                response.setStatus(401);
-                                response.setContentType("application/json");
-                                response.getWriter().write(
-                                        "{\"error\": \"Unauthorized\", \"message\": \"Token krävs för denna endpoint\"}"
-                                );
-                        })
+                                // Hantering av fel relaterade till autentication/authorization
+                                .exceptionHandling(exceptions -> exceptions
 
-                        // Hantera 403 Forbidden (användare har inte rätt roll)
-                        .accessDeniedHandler((request, response, accessDeniedException) -> {
-                                response.setStatus(403);
-                                response.setContentType("application/json"); 
-                                response.getWriter().write(
-                                        "{\"error\": \"Forbidden\", \"message\": \"Du har inte behörighet att komma åt denna resurs\"}"
-                                );
-                                
-                        }));
-                        
-                return http.build(); // Retunera den färdiga SecurityFilterChain-objektet till Sptring 
-        
-    }
+                                                // Hantera 401 Unauthorized (token saknas eller ogiltig)
+                                                .authenticationEntryPoint((request, response, authException) -> {
+                                                        response.setStatus(401);
+                                                        response.setContentType("application/json");
+                                                        response.getWriter().write(
+                                                                        "{\"error\": \"Unauthorized\", \"message\": \"Token krävs för denna endpoint\"}");
+                                                })
+
+                                                // Hantera 403 Forbidden (användare har inte rätt roll)
+                                                .accessDeniedHandler((request, response, accessDeniedException) -> {
+                                                        response.setStatus(403);
+                                                        response.setContentType("application/json");
+                                                        response.getWriter().write(
+                                                                        "{\"error\": \"Forbidden\", \"message\": \"Du har inte behörighet att komma åt denna resurs\"}");
+
+                                                }));
+
+                return http.build(); // Retunera den färdiga SecurityFilterChain-objektet till Sptring
+
+        }
 }

@@ -1,5 +1,6 @@
 package com.example.adminService.Security;
 
+import com.example.adminService.Service.AdminDetailsImpl;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -43,21 +44,67 @@ public class JwtUtilInterface implements JwtUtil {
 
     @Override
     public String generateToken(UserDetails userDetails, Long adminId) {
+        // Hämta Admin entity från AdminDetailsImpl för att få email
+        AdminDetailsImpl adminDetails = (AdminDetailsImpl) userDetails;
+        String email = adminDetails.getAdmin().getEmail();
+
         Map<String, Object> extraClaims = new HashMap<>();
-        extraClaims.put("adminId", adminId);
+        // Använd SAMMA claim-namn som UserService + Gateway förväntar
+        extraClaims.put("userId", adminId); // Gateway letar efter "userId", inte "adminId"
+        extraClaims.put("email", email); // Lägg till email claim
         extraClaims.put("role", "ADMIN");
-        return generateToken(extraClaims, userDetails);
+
+        // Subject ska vara email (inte username) för kompatibilitet med Gateway
+        return generateTokenWithEmail(extraClaims, email);
+    }
+
+    // Ny helper-metod för att sätta email som subject
+    private String generateTokenWithEmail(Map<String, Object> extraClaims, String email) {
+        return Jwts.builder()
+                .setClaims(extraClaims)
+                .setSubject(email) // Email som subject (inte username)
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + jwtExpiration))
+                .signWith(getSignInKey(), SignatureAlgorithm.HS256)
+                .compact();
     }
 
     @Override
     public boolean isTokenValid(String token, UserDetails userDetails) {
-        final String username = extractUsername(token);
-        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+        // Subject är nu email (inte username) för nya tokens
+        final String subjectEmail = extractUsername(token); // extractUsername läser subject (som är email nu)
+
+        // För AdminDetailsImpl, hämta email från admin-objektet
+        if (userDetails instanceof AdminDetailsImpl) {
+            AdminDetailsImpl adminDetails = (AdminDetailsImpl) userDetails;
+            String adminEmail = adminDetails.getAdmin().getEmail();
+            return (subjectEmail.equals(adminEmail) && !isTokenExpired(token));
+        }
+
+        // Fallback för andra UserDetails implementationer (backward compatibility)
+        return (subjectEmail.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
 
     @Override
+    @Deprecated
     public Long extractAdminId(String token) {
+        // Deprecated: Gamla tokens använder "adminId", nya använder "userId"
         return extractClaim(token, claims -> claims.get("adminId", Long.class));
+    }
+
+    @Override
+    public Long extractUserId(String token) {
+        // Standardiserat claim-namn som matchar UserService och Gateway
+        return extractClaim(token, claims -> claims.get("userId", Long.class));
+    }
+
+    @Override
+    public String extractEmail(String token) {
+        // Email kan vara både i subject och som egen claim
+        return extractClaim(token, claims -> {
+            String email = claims.get("email", String.class);
+            return email != null ? email : claims.getSubject();
+        });
     }
 
     @Override
