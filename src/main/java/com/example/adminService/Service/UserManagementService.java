@@ -162,7 +162,7 @@ public class UserManagementService implements UserManagementServiceInterface {
                     .block();
             return updatedUser;
         } catch (Exception e) {
-            throw new RuntimeException("Kunde inte uppdatera användare: " + e.getMessage());
+            throw new RuntimeException("Could not update user: " + e.getMessage());
         }
     }
 

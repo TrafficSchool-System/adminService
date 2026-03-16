@@ -65,8 +65,8 @@ public class GatewayHeaderAuthenticationFilter extends OncePerRequestFilter {
 
         if (userId != null && userEmail != null && userRole != null) {
 
-            log.info("🌐 Gateway headers detected - User authenticated by Gateway");
-            log.debug("   User ID: {}, Email: {}, Role: {}", userId, userEmail, userRole);
+            log.info("Gateway headers detected - User authenticated by Gateway");
+            log.debug("User ID: {}, Email: {}, Role: {}", userId, userEmail, userRole);
 
             try {
                 SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + userRole.toUpperCase());
@@ -82,13 +82,13 @@ public class GatewayHeaderAuthenticationFilter extends OncePerRequestFilter {
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
 
-                log.info("✅ Authentication set from Gateway headers - {} with role {}", userEmail, userRole);
+                log.info("Authentication set from Gateway headers - {} with role {}", userEmail, userRole);
 
             } catch (Exception e) {
-                log.error("❌ Failed to create authentication from Gateway headers: {}", e.getMessage());
+                log.error("Failed to create authentication from Gateway headers: {}", e.getMessage());
             }
         } else {
-            log.debug("⏭️ No Gateway headers found - Request may be public");
+            log.debug("No Gateway headers found - Request may be public");
         }
 
         filterChain.doFilter(request, response);
