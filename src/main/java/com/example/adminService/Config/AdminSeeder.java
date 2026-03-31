@@ -3,6 +3,8 @@ package com.example.adminService.Config;
 import com.example.adminService.Entity.Admin;
 import com.example.adminService.Repository.AdminRepository;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,6 +13,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @Configuration
 @RequiredArgsConstructor
 public class AdminSeeder {
+
+    private static final Logger log = LoggerFactory.getLogger(AdminSeeder.class);
 
     @Bean
     CommandLineRunner initAdmin(AdminRepository adminRepository, PasswordEncoder passwordEncoder) {
@@ -25,7 +29,7 @@ public class AdminSeeder {
                 admin.setActive(true);
 
                 adminRepository.save(admin);
-                System.out.println("✅ Default admin user created: admin / admin123");
+                log.info("Default admin user created - username: {}", admin.getUsername());
             }
         };
     }

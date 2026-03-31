@@ -33,7 +33,7 @@ public class GlobalExceptionHandler {
                 .map(error -> error.getDefaultMessage())
                 .collect(Collectors.toList());
 
-        Map<String, Object> body = buildError("Valideringsfel", "Vänligen kontrollera dina uppgifter och försök igen.",
+        Map<String, Object> body = buildError("Validation error", "Please check your input and try again.",
                 HttpStatus.BAD_REQUEST.value());
         body.put("details", errors);
 
@@ -42,29 +42,29 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(WebClientResponseException.class)
     public ResponseEntity<Map<String, Object>> handleWebClientException(WebClientResponseException ex) {
-        // Hantera fel från andra microservices
+        // Handle errors from other microservices
         if (ex.getStatusCode().value() == 409) {
-            // CONFLICT - t.ex. personnummer eller email finns redan
+            // CONFLICT - e.g. personal number or email already exists
             return new ResponseEntity<>(
-                    buildError("Duplicerat värde", "Personnummer eller e-post finns redan registrerad i systemet.",
+                    buildError("Duplicate value", "Personal number or email is already registered in the system.",
                             HttpStatus.CONFLICT.value()),
                     HttpStatus.CONFLICT);
         } else if (ex.getStatusCode().value() == 404) {
             // NOT FOUND
             return new ResponseEntity<>(
-                    buildError("Användare hittades inte", "Den användare du söker efter kunde inte hittas.",
+                    buildError("User not found", "The user you are looking for could not be found.",
                             HttpStatus.NOT_FOUND.value()),
                     HttpStatus.NOT_FOUND);
         } else if (ex.getStatusCode().value() >= 400 && ex.getStatusCode().value() < 500) {
             // CLIENT ERROR
             return new ResponseEntity<>(
-                    buildError("Felaktig förfrågan", "Vänligen kontrollera dina uppgifter och försök igen.",
+                    buildError("Invalid request", "Please check your input and try again.",
                             ex.getStatusCode().value()),
                     ex.getStatusCode());
         } else {
             // SERVER ERROR
             return new ResponseEntity<>(
-                    buildError("Tjänsten är tillfälligt otillgänglig", "Vänligen försök igen om en stund.",
+                    buildError("Service temporarily unavailable", "Please try again in a moment.",
                             HttpStatus.SERVICE_UNAVAILABLE.value()),
                     HttpStatus.SERVICE_UNAVAILABLE);
         }
@@ -73,8 +73,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Map<String, Object>> handleRuntimeException(RuntimeException ex) {
         Map<String, Object> errorResponse = buildError(
-                "Ett fel uppstod",
-                "Något gick fel vid bearbetningen. Vänligen försök igen.",
+                "An error occurred",
+                "Something went wrong during processing. Please try again.",
                 HttpStatus.BAD_REQUEST.value());
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
@@ -83,8 +83,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGenericException(Exception ex) {
         Map<String, Object> errorResponse = buildError(
-                "Ett oväntat fel uppstod",
-                "Något gick fel. Vänligen försök igen senare eller kontakta support om problemet kvarstår.",
+                "An unexpected error occurred",
+                "Something went wrong. Please try again later or contact support if the problem persists.",
                 HttpStatus.INTERNAL_SERVER_ERROR.value());
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
