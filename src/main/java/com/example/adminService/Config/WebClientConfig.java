@@ -1,5 +1,6 @@
 package com.example.adminService.Config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -24,6 +25,9 @@ import org.springframework.web.reactive.function.client.WebClient;
  */
 @Configuration
 public class WebClientConfig {
+
+    @Value("${service.api.key}")
+    private String serviceApiKey;
 
     /**
      * WebClient.Builder med load balancing
@@ -56,6 +60,7 @@ public class WebClientConfig {
         return webClientBuilder
                 .baseUrl("http://user-service")
                 .defaultHeader("X-Internal-Source", "admin-service")
+                .defaultHeader("X-Internal-API-Key", serviceApiKey)
                 .build();
     }
 
@@ -76,6 +81,7 @@ public class WebClientConfig {
         return webClientBuilder
                 .baseUrl("http://payment-service")
                 .defaultHeader("X-Internal-Source", "admin-service")
+                .defaultHeader("X-Internal-API-Key", serviceApiKey)
                 .build();
     }
 
@@ -96,6 +102,7 @@ public class WebClientConfig {
         return webClientBuilder
                 .baseUrl("http://quiz-service")
                 .defaultHeader("X-Internal-Source", "admin-service")
+                .defaultHeader("X-Internal-API-Key", serviceApiKey)
                 .build();
     }
 
@@ -112,6 +119,7 @@ public class WebClientConfig {
         return webClientBuilder
                 .baseUrl("http://exam-service")
                 .defaultHeader("X-Internal-Source", "admin-service")
+                .defaultHeader("X-Internal-API-Key", serviceApiKey)
                 .build();
     }
 }
