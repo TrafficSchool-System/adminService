@@ -2,6 +2,7 @@ package com.example.adminService.Service;
 
 import com.example.adminService.Dto.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
@@ -14,6 +15,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserManagementService implements UserManagementServiceInterface {
 
     private final WebClient userServiceWebClient;
@@ -67,6 +69,7 @@ public class UserManagementService implements UserManagementServiceInterface {
 
     private List<UserBasicInfoDto> getAllUsers() {
         try {
+            log.debug("🔄 Calling UserService to get all users...");
             List<UserBasicInfoDto> users = userServiceWebClient
                     .get()
                     .uri("/api/admin/users")
@@ -75,8 +78,10 @@ public class UserManagementService implements UserManagementServiceInterface {
                     .bodyToMono(new ParameterizedTypeReference<List<UserBasicInfoDto>>() {
                     })
                     .block();
+            log.info("✅ Successfully fetched {} users from UserService", users != null ? users.size() : 0);
             return users != null ? users : new ArrayList<>();
         } catch (Exception e) {
+            log.error("❌ Error fetching users from UserService: {}", e.getMessage(), e);
             return new ArrayList<>();
         }
     }
