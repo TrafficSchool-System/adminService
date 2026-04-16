@@ -171,4 +171,97 @@ public class UserManagementService implements UserManagementServiceInterface {
         }
     }
 
+    /**
+     * CREATE USER WITH SUBSCRIPTION (ORCHESTRATOR)
+     * 
+     * Orchestrates user creation + subscription assignment in one transaction.
+     * 
+     * FLOW:
+     * 1. Create user in UserService (sends magic link)
+     * 2. Create manual payment in PaymentService (activates subscription)
+     * 3. Return aggregated response
+     * 
+     * @param request User info + package ID
+     * @return Response with user and subscription details
+     */
+    @Override
+    public UserWithSubscriptionResponseDTO createUserWithSubscription(CreateUserWithSubscriptionDTO request) {
+        log.info("🎫 Creating user with subscription: email={}, packageId={}",
+                request.getEmail(), request.getPackageId());
+
+        try {
+            // STEP 1: Create user in UserService
+            log.debug("📝 Step 1: Creating user in UserService...");
+            UserBasicInfoDto user = createUserInUserService(request);
+            log.info("✅ User created: id={}, email={}", user.getId(), user.getEmail());
+
+            // STEP 2: Create manual payment in PaymentService (activates subscription)
+            log.debug("💳 Step 2: Creating manual payment in PaymentService...");
+            ManualPaymentResponse payment = createManualPayment(user.getId(), request.getPackageId());
+            log.info("✅ Manual payment created: id={}, package={}", payment.getId(), payment.getPackageName());
+
+            // STEP 3: Build response
+            return UserWithSubscriptionResponseDTO.builder()
+                    .user(user)
+                    .paymentId(payment.getId())
+                    .packageName(payment.getPackageName())
+                    .packagePrice(payment.getAmount())
+                    .status("SUCCESS")
+                    .message("User created with active subscription. Magic link sent to " + user.getEmail())
+                    .build();
+
+        } catch (Exception e) {
+            log.error("❌ Failed to create user with subscription: {}", e.getMessage(), e);
+            return UserWithSubscriptionResponseDTO.builder()
+                    .status("FAILED")
+                    .message("Failed to create user: " + e.getMessage())
+                    .build();
+        }
+    }
+
+    /**
+     * Helper: Create user in UserService
+     */
+    private UserBasicInfoDto createUserInUserService(CreateUserWithSubscriptionDTO request) {
+        try {
+            return userServiceWebClient
+                    .post()
+                    .uri("/api/admin/users")
+                    .header("X-Internal-API-Key", serviceApiKey)
+                    .bodyValue(request)
+                    .retrieve()
+                    .bodyToMono(UserBasicInfoDto.class)
+                    .block();
+        } catch (Exception e) {
+            log.error("❌ Failed to create user in UserService: {}", e.getMessage());
+            throw new RuntimeException("Failed to create user: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Helper: Create manual payment in PaymentService
+     */
+    private ManualPaymentResponse createManualPayment(Long userId, Long packageId) {
+        try {
+            ManualPaymentRequest paymentRequest = ManualPaymentRequest.builder()
+                    .userId(userId)
+                    .packageId(packageId)
+                    .build();
+
+            ManualPaymentResponse payment = paymentServiceWebClient
+                    .post()
+                    .uri("/api/admin/payments/manual")
+                    .header("X-Internal-API-Key", serviceApiKey)
+                    .bodyValue(paymentRequest)
+                    .retrieve()
+                    .bodyToMono(ManualPaymentResponse.class)
+                    .block();
+
+            return payment;
+        } catch (Exception e) {
+            log.error("❌ Failed to create manual payment: {}", e.getMessage());
+            throw new RuntimeException("Failed to create subscription: " + e.getMessage(), e);
+        }
+    }
+
 }

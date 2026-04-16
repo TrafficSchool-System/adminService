@@ -1,10 +1,13 @@
 package com.example.adminService.Controller;
 
 import com.example.adminService.Dto.CompleteUserDetailsDto;
+import com.example.adminService.Dto.CreateUserWithSubscriptionDTO;
 import com.example.adminService.Dto.UpdateUserRequestDto;
 import com.example.adminService.Dto.UserBasicInfoDto;
+import com.example.adminService.Dto.UserWithSubscriptionResponseDTO;
 import com.example.adminService.Service.UserManagementService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -89,6 +92,30 @@ public class UserManagementController {
         List<CompleteUserDetailsDto> allUsers = userManagementService.getAllUsersWithDetails();
 
         return ResponseEntity.ok(allUsers);
+    }
+
+    /**
+     * CREATE USER WITH SUBSCRIPTION (ADMIN)
+     * POST /api/admin/users
+     * 
+     * Creates a new user + assigns package subscription in one operation.
+     * Used when admin sells package manually (in person, over phone, etc.).
+     * 
+     * FLOW:
+     * 1. Create user in UserService (sends magic link email)
+     * 2. Create manual payment in PaymentService (status: PAID, method: MANUAL)
+     * 3. PaymentService activates subscription in UserService
+     * 
+     * @param request User info + package ID
+     * @return Created user with subscription details
+     */
+    @PostMapping
+    public ResponseEntity<UserWithSubscriptionResponseDTO> createUserWithSubscription(
+            @Valid @RequestBody CreateUserWithSubscriptionDTO request) {
+
+        UserWithSubscriptionResponseDTO response = userManagementService.createUserWithSubscription(request);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     /**
