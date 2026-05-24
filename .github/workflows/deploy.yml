@@ -48,7 +48,7 @@ jobs:
             --registry-password ${{ secrets.ACR_PASSWORD }} \
             --target-port 8082 \
             --ingress internal \
-            --env-vars "SPRING_PROFILES_ACTIVE=prod" "MYSQLHOST=${{ secrets.MYSQL_HOST }}" "MYSQLPORT=3306" "MYSQLDATABASE=adminServiceDb" "MYSQLUSER=${{ secrets.MYSQL_USER }}" "MYSQLPASSWORD=${{ secrets.MYSQL_PASSWORD }}" "JWT_SECRET=${{ secrets.JWT_SECRET }}" "SERVICE_API_KEY=${{ secrets.SERVICE_API_KEY }}" "EUREKA_URL=http://eureka-server/eureka/"
+            --env-vars "SPRING_PROFILES_ACTIVE=prod" "MYSQLHOST=${{ secrets.MYSQL_HOST }}" "MYSQLPORT=3306" "MYSQLDATABASE=adminServiceDb" "MYSQLUSER=${{ secrets.MYSQL_USER }}" "MYSQLPASSWORD=${{ secrets.MYSQL_PASSWORD }}" "JWT_SECRET=${{ secrets.JWT_SECRET }}" "SERVICE_API_KEY=${{ secrets.SERVICE_API_KEY }}" "EUREKA_URL=http://eureka-server/eureka/" "ADMIN_DEFAULT_USERNAME=${{ secrets.ADMIN_DEFAULT_USERNAME }}" "ADMIN_DEFAULT_PASSWORD=${{ secrets.ADMIN_DEFAULT_PASSWORD }}" "ADMIN_DEFAULT_EMAIL=${{ secrets.ADMIN_DEFAULT_EMAIL }}"
 
       - name: Sätt minimum 1 replik (förhindra scale-to-zero)
         run: |
