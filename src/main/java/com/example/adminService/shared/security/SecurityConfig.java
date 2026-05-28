@@ -39,7 +39,9 @@ public class SecurityConfig {
                                                 // ==============================================
                                                 .requestMatchers(
                                                                 "/api/admin/auth/login",
-                                                                "/api/admin/auth/health")
+                                                                "/api/admin/auth/health",
+                                                                "/actuator/health",
+                                                                "/actuator/info")
                                                 .permitAll()
 
                                                 // ==============================================
