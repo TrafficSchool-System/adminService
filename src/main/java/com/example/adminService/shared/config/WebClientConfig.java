@@ -27,6 +27,18 @@ public class WebClientConfig {
     @Value("${service.api.key}")
     private String serviceApiKey;
 
+    @Value("${user-service.base-url}")
+    private String userServiceBaseUrl;
+
+    @Value("${payment-service.base-url}")
+    private String paymentServiceBaseUrl;
+
+    @Value("${quiz-service.base-url}")
+    private String quizServiceBaseUrl;
+
+    @Value("${exam-service.base-url}")
+    private String examServiceBaseUrl;
+
     private WebClient buildClient(String baseUrl) {
         HttpClient httpClient = HttpClient.create()
                 .responseTimeout(Duration.ofSeconds(8));
@@ -40,21 +52,21 @@ public class WebClientConfig {
 
     @Bean
     public WebClient userServiceWebClient() {
-        return buildClient("http://user-service");
+        return buildClient(userServiceBaseUrl);
     }
 
     @Bean
     public WebClient paymentServiceWebClient() {
-        return buildClient("http://payment-service");
+        return buildClient(paymentServiceBaseUrl);
     }
 
     @Bean
     public WebClient quizServiceWebClient() {
-        return buildClient("http://quiz-service");
+        return buildClient(quizServiceBaseUrl);
     }
 
     @Bean
     public WebClient examServiceWebClient() {
-        return buildClient("http://exam-service");
+        return buildClient(examServiceBaseUrl);
     }
 }
