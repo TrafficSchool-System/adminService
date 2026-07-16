@@ -2,10 +2,12 @@ package com.example.adminService.features.userManagement.controller;
 
 import com.example.adminService.features.userManagement.dto.CompleteUserDetailsDto;
 import com.example.adminService.features.userManagement.dto.CreateUserWithSubscriptionDTO;
+import com.example.adminService.features.userManagement.dto.ExtendSubscriptionRequest;
 import com.example.adminService.features.userManagement.dto.UpdateUserRequestDto;
 import com.example.adminService.features.userManagement.dto.UserBasicInfoDto;
 import com.example.adminService.features.userManagement.dto.UserWithSubscriptionResponseDTO;
 import com.example.adminService.features.userManagement.service.CreateUserWithSubscriptionUseCase;
+import com.example.adminService.features.userManagement.service.ExtendUserSubscriptionUseCase;
 import com.example.adminService.features.userManagement.service.GetCompleteUserDetailsUseCase;
 import com.example.adminService.features.userManagement.service.ListAllUsersWithDetailsUseCase;
 import com.example.adminService.features.userManagement.service.UpdateUserInfoUseCase;
@@ -16,7 +18,6 @@ import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
 import java.util.List;
-import java.util.Map;
 
 /**
  * ADMIN USER AGGREGATION CONTROLLER
@@ -50,6 +51,7 @@ public class UserManagementController {
     private final ListAllUsersWithDetailsUseCase listAllUsersWithDetailsUseCase;
     private final CreateUserWithSubscriptionUseCase createUserWithSubscriptionUseCase;
     private final UpdateUserInfoUseCase updateUserInfoUseCase;
+    private final ExtendUserSubscriptionUseCase extendUserSubscriptionUseCase;
 
     /**
      * GET COMPLETE USER DETAILS
@@ -143,6 +145,19 @@ public class UserManagementController {
         UserBasicInfoDto updatedUser = updateUserInfoUseCase.execute(userId, updateRequest);
 
         return ResponseEntity.ok(updatedUser);
+    }
+
+    /**
+     * EXTEND SUBSCRIPTION
+     * PUT /api/admin/users/{userId}/subscription/extend
+     */
+    @PutMapping("/{userId}/subscription/extend")
+    public ResponseEntity<Void> extendSubscription(
+            @PathVariable Long userId,
+            @Valid @RequestBody ExtendSubscriptionRequest request) {
+        extendUserSubscriptionUseCase.execute(userId, request.getDays());
+        return ResponseEntity.ok().build();
+
     }
 
 }
